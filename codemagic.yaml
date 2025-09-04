@@ -1,0 +1,30 @@
+workflows:
+  ios-capacitor-build:
+    name: iOS Capacitor Build
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      xcode: 15.3 # Or your preferred version
+      node: 20   # Or your preferred version
+      groups:
+        # Create an environment variable group in Codemagic UI called 'signing_credentials'
+        # This build does not use code signing. If you need it, add your credentials group here.
+        # - signing_credentials
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          set -e # exit on first error
+          npm install
+      - name: Capacitor Sync
+        script: |
+          set -e
+          # This command copies your web app into the native project
+          npx cap sync ios
+      - name: Build Unsigned IPA
+        script: |
+          set -e
+          # Build an unsigned IPA for use with services like Signulous
+          xcode-project build-ipa --workspace "ios/App/App.xcworkspace" --scheme "App" --build-args "-sdk iphoneos CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Logs/Build/*.log
