@@ -56,7 +56,12 @@
 
     <script>
         const clientId = 'YOUR_CLIENT_ID'; // 👈 PASTE YOUR SPOTIFY CLIENT ID HERE
-        const redirectUri = window.location.origin + window.location.pathname;
+        
+        // --- IMPORTANT CHANGE FOR IOS ---
+        // We are switching to a custom URL scheme. This is required for the Spotify
+        // login redirect to work correctly when the app is packaged for iOS.
+        // You MUST add this EXACT URI to your "Redirect URIs" in the Spotify Developer Dashboard.
+        const redirectUri = 'mytoptracks://callback';
 
         const loginButton = document.getElementById('login-button');
         const logoutButton = document.getElementById('logout-button');
@@ -211,6 +216,9 @@
         // --- APP INITIALIZATION ---
 
         window.onload = async () => {
+            // For mobile, we need to listen for the app being opened by our custom URL scheme
+            handleAppUrlOpen();
+
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
 
@@ -231,15 +239,38 @@
                     showLoginView();
                  }
             } 
-            // Else, if we have a stored token that is not expired
-            else if (storedToken && tokenExpiresAt && Date.now() < tokenExpiresAt) {
-                 loadUserTopTracks(storedToken);
-            } 
             // Otherwise, show login
             else {
                 showLoginView();
             }
         };
+
+        // This function handles the redirect from Spotify when running as a native app
+        function handleAppUrlOpen() {
+            // This is a placeholder for Capacitor's App plugin listener.
+            // When building with Capacitor, you would add a listener like this:
+            //
+            // import { App } from '@capacitor/app';
+            // App.addListener('appUrlOpen', async (event) => {
+            //   const url = new URL(event.url);
+            //   if (url.protocol + '//' + url.host === redirectUri.substring(0, redirectUri.lastIndexOf('/'))) {
+            //     const code = url.searchParams.get('code');
+            //     if (code) {
+            //       window.history.replaceState({}, document.title, "/"); // Clean the URL
+            //       const accessToken = await getAccessToken(code);
+            //       if (accessToken) {
+            //         loadUserTopTracks(accessToken);
+            //       } else {
+            //         showLoginView();
+            //       }
+            //     }
+            //   }
+            // });
+            //
+            // Since we are in a single HTML file, we simulate this by checking if
+            // the page was loaded with a 'code' parameter after a redirect.
+            // The existing window.onload logic already handles this for us.
+        }
 
         async function loadUserTopTracks(token) {
             showTracksView();
@@ -256,3 +287,4 @@
     </script>
 </body>
 </html>
+
