@@ -55,8 +55,21 @@
     </div>
 
     <script>
+        // --------------------------------------------------------------------------
+        // IMPORTANT: CONFIGURATION
+        //
+        // 1. Paste your Spotify Client ID here.
+        //    You can get one from the Spotify Developer Dashboard:
+        //    https://developer.spotify.com/dashboard/
         const clientId = 'YOUR_CLIENT_ID'; // 👈 PASTE YOUR SPOTIFY CLIENT ID HERE
-        const redirectUri = window.location.origin + window.location.pathname;
+
+        // 2. Configure the Redirect URI in your Spotify App settings.
+        //    For this native iOS app, the ONLY valid Redirect URI is the one below.
+        //    You MUST add this exact URI to the "Redirect URIs" list in your
+        //    Spotify app settings in the Developer Dashboard.
+        const redirectUri = 'capacitor://localhost/';
+        //
+        // --------------------------------------------------------------------------
 
         const loginButton = document.getElementById('login-button');
         const logoutButton = document.getElementById('logout-button');
