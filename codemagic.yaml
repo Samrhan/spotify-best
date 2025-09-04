@@ -6,10 +6,6 @@ workflows:
     environment:
       xcode: 15.3 # Or your preferred version
       node: 20   # Or your preferred version
-      groups:
-        # Create an environment variable group in Codemagic UI called 'signing_credentials'
-        # This build does not use code signing. If you need it, add your credentials group here.
-        # - signing_credentials
     scripts:
       - name: Install npm dependencies
         script: |
