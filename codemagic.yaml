@@ -1,0 +1,46 @@
+workflows:
+  ios-capacitor-build:
+    name: iOS Capacitor Build
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      xcode: 15.3 # Or your preferred version
+      node: 20   # Or your preferred version
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          set -e # exit on first error
+          npm install
+      - name: Capacitor Sync
+        script: |
+          set -e
+          # This command copies your web app into the native project
+          npx cap sync ios
+      - name: Build Unsigned IPA
+        script: |
+          set -e
+          set -x
+
+          ARCHIVE_PATH="build/ios/xcarchive/App.xcarchive"
+
+          # Archive the project
+          xcodebuild archive \
+            -workspace "ios/App/App.xcworkspace" \
+            -scheme "App" \
+            -archivePath "$ARCHIVE_PATH" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED="NO" \
+            CODE_SIGNING_ALLOWED="NO"
+
+          # Manually create the IPA
+          IPA_PAYLOAD_DIR="build/ios/ipa/Payload"
+          mkdir -p "$IPA_PAYLOAD_DIR"
+
+          # Copy the .app bundle from the archive to the Payload directory
+          cp -r "$ARCHIVE_PATH/Products/Applications/App.app" "$IPA_PAYLOAD_DIR/"
+
+          # Zip the Payload to create the .ipa file
+          (cd build/ios/ipa && zip -r App.ipa Payload/)
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Logs/Build/*.log

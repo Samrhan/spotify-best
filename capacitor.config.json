@@ -1,0 +1,6 @@
+{
+  "appId": "com.example.myspotifytoptracks",
+  "appName": "My Spotify Top Tracks",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
