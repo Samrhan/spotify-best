@@ -272,47 +272,42 @@
         async function initializeApp() {
             log('initializeApp started.');
             try {
-                // In a vanilla JS Capacitor app, it's safest to wait for plugins to be ready.
-                await new Promise(resolve => {
-                    const interval = setInterval(() => {
-                        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
-                            clearInterval(interval);
-                            log('Capacitor App plugin is ready.');
-                            resolve();
+                log('Attempting to inspect Capacitor objects...');
+
+                setTimeout(() => {
+                    log('--- Debugging Capacitor Object (after 500ms) ---');
+                    if (window.Capacitor) {
+                        log('window.Capacitor exists.');
+                        try {
+                            log(`window.Capacitor keys: ${Object.keys(window.Capacitor).join(', ')}`);
+                        } catch (e) {
+                            log(`Could not get keys for window.Capacitor: ${e.message}`);
                         }
-                    }, 50);
-                });
 
-                const { App } = window.Capacitor.Plugins;
+                        if (window.Capacitor.Plugins) {
+                            log('window.Capacitor.Plugins exists.');
+                            try {
+                                const pluginKeys = Object.keys(window.Capacitor.Plugins);
+                                log(`window.Capacitor.Plugins keys: ${pluginKeys.join(', ')}`);
+                                if (pluginKeys.length === 0) {
+                                    log('WARNING: window.Capacitor.Plugins is empty.');
+                                }
+                            } catch (e) {
+                                log(`Could not get keys for window.Capacitor.Plugins: ${e.message}`);
+                            }
+                        } else {
+                            log('window.Capacitor.Plugins does NOT exist.');
+                        }
+                    } else {
+                        log('window.Capacitor does NOT exist.');
+                    }
+                    log('--- End Debugging ---');
+                }, 500);
 
-                // Add a listener for when the app is opened from a URL while it's running
-                App.addListener('appUrlOpen', (event) => {
-                    log(`appUrlOpen event fired: ${event.url}`);
-                    handleAuthRedirect(event.url);
-                });
-                log('appUrlOpen listener added.');
+                // Show the login view so the user can see the logs without getting stuck.
+                log('Showing login view while waiting for debug logs.');
+                showLoginView();
 
-                // Check if the app was launched with a URL (i.e., from a closed state)
-                const launchUrl = await App.getLaunchUrl();
-                if (launchUrl && launchUrl.url) {
-                    log(`App launched with URL: ${launchUrl.url}`);
-                    await handleAuthRedirect(launchUrl.url);
-                    return; // The handler will show the correct view
-                } else {
-                    log('App launched without a URL.');
-                }
-
-                // If not launched with a URL, check for a stored, valid token
-                const storedToken = localStorage.getItem('spotify_access_token');
-                const tokenExpiresAt = localStorage.getItem('spotify_token_expires_at');
-
-                if (storedToken && tokenExpiresAt && Date.now() < tokenExpiresAt) {
-                    log('Found valid stored token. Loading tracks.');
-                    loadUserTopTracks(storedToken);
-                } else {
-                    log('No valid token. Showing login view.');
-                    showLoginView();
-                }
             } catch (e) {
                 log(`CRITICAL ERROR in initializeApp: ${e.message}`);
             }
