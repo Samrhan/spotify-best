@@ -73,13 +73,15 @@
         //
         // --------------------------------------------------------------------------
 
+        // Import the App plugin from Capacitor
+        import { App } from 'https://unpkg.com/@capacitor/app@5.0.6/dist/esm/index.js';
+
         const loginButton = document.getElementById('login-button');
         const logoutButton = document.getElementById('logout-button');
         const loginView = document.getElementById('login-view');
         const tracksView = document.getElementById('tracks-view');
         const tracksList = document.getElementById('tracks-list');
         const loadingSkeleton = document.getElementById('loading-skeleton');
-        import { App } from 'https://unpkg.com/@capacitor/app@latest/dist/esm/index.js';
 
         // --- AUTHENTICATION ---
 
@@ -162,7 +164,7 @@
         // --- API CALLS ---
 
         async function getTopTracks(token) {
-            const response = await fetch('https://api.spotify.com/v1/me/top/tracks?time_range=medium_term&limit=20', {
+            const response = await fetch('https://api.spotify.com/v1/me/top/tracks', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -273,50 +275,21 @@
         async function initializeApp() {
             log('initializeApp started.');
 
+            // Add the listener for the appUrlOpen event
             App.addListener('appUrlOpen', (data) => {
                 log(`App opened with URL: ${data.url}`);
                 handleAuthRedirect(data.url);
             });
 
-            try {
-                log('Attempting to inspect Capacitor objects...');
+            const accessToken = localStorage.getItem('spotify_access_token');
+            const expiresAt = localStorage.getItem('spotify_token_expires_at');
 
-                setTimeout(() => {
-                    log('--- Debugging Capacitor Object (after 500ms) ---');
-                    if (window.Capacitor) {
-                        log('window.Capacitor exists.');
-                        try {
-                            log(`window.Capacitor keys: ${Object.keys(window.Capacitor).join(', ')}`);
-                        } catch (e) {
-                            log(`Could not get keys for window.Capacitor: ${e.message}`);
-                        }
-
-                        if (window.Capacitor.Plugins) {
-                            log('window.Capacitor.Plugins exists.');
-                            try {
-                                const pluginKeys = Object.keys(window.Capacitor.Plugins);
-                                log(`window.Capacitor.Plugins keys: ${pluginKeys.join(', ')}`);
-                                if (pluginKeys.length === 0) {
-                                    log('WARNING: window.Capacitor.Plugins is empty.');
-                                }
-                            } catch (e) {
-                                log(`Could not get keys for window.Capacitor.Plugins: ${e.message}`);
-                            }
-                        } else {
-                            log('window.Capacitor.Plugins does NOT exist.');
-                        }
-                    } else {
-                        log('window.Capacitor does NOT exist.');
-                    }
-                    log('--- End Debugging ---');
-                }, 500);
-
-                // Show the login view so the user can see the logs without getting stuck.
-                log('Showing login view while waiting for debug logs.');
+            if (accessToken && expiresAt && Date.now() < parseInt(expiresAt)) {
+                log('Found valid access token.');
+                loadUserTopTracks(accessToken);
+            } else {
+                log('No valid access token found, showing login view.');
                 showLoginView();
-
-            } catch (e) {
-                log(`CRITICAL ERROR in initializeApp: ${e.message}`);
             }
         }
 
@@ -333,7 +306,6 @@
                 tracksList.innerHTML = `<p class="text-red-400 text-center">Failed to load tracks. Please try logging out and back in.</p>`;
             }
         }
-
     </script>
 </body>
 </html>
