@@ -152,7 +152,7 @@
         // --- API CALLS ---
 
         async function getTopTracks(token) {
-            const response = await fetch('http://googleusercontent.com/spotify.com/5', {
+            const response = await fetch('https://api.spotify.com/v1/me/top/tracks', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
