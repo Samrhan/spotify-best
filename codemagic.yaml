@@ -20,7 +20,7 @@ workflows:
         script: |
           set -e
           # Build an unsigned IPA for use with services like Signulous
-          xcode-project build-ipa --workspace "ios/App/App.xcworkspace" --scheme "App" --build-args "-sdk iphoneos CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO"
+          xcode-project build-ipa --workspace "ios/App/App.xcworkspace" --scheme "App" --export-options "ios/App/ExportOptions.plist"
     artifacts:
       - build/ios/ipa/*.ipa
       - $HOME/Library/Developer/Xcode/DerivedData/**/Logs/Build/*.log
