@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>My Spotify Top Tracks</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,14 +11,21 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-        }
-        /* Prevents pull-to-refresh, which can interfere with the single-page app feel */
-        body {
             overscroll-behavior-y: contain;
+        }
+        #app-container {
+            /* Adjust for notch/Dynamic Island on iPhones */
+            padding-top: env(safe-area-inset-top, 1rem);
+            padding-bottom: env(safe-area-inset-bottom, 1rem);
+            padding-left: env(safe-area-inset-left, 1rem);
+            padding-right: env(safe-area-inset-right, 1rem);
         }
         .tab-button.active {
             color: #FFFFFF;
             border-color: #1DB954; /* Spotify Green */
+        }
+        .global-tab-button.active {
+            background-color: #2a2a2a;
         }
     </style>
 </head>
@@ -36,28 +43,57 @@
             </button>
         </div>
 
-        <!-- Tracks View -->
-        <div id="tracks-view" class="hidden w-full max-w-md">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold">Your Top Tracks</h1>
+        <!-- Main Content View -->
+        <div id="main-content-view" class="hidden w-full max-w-md">
+             <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">Your Top <span id="content-type-title">Songs</span></h1>
                 <button id="logout-button" class="text-sm text-zinc-400 hover:text-white">Log Out</button>
             </div>
 
-            <!-- Tabs -->
-            <div id="tabs" class="flex border-b border-zinc-800 mb-4">
-                <button data-range="long_term" class="tab-button flex-1 py-2 text-center text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent">All Time</button>
-                <button data-range="medium_term" class="tab-button flex-1 py-2 text-center text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent">Last 6 Months</button>
-                <button data-range="short_term" class="tab-button flex-1 py-2 text-center text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent">Last 4 Weeks</button>
+            <!-- Global Tabs -->
+            <div class="flex bg-zinc-800 rounded-lg p-1 mb-4">
+                <button id="songs-global-tab" class="global-tab-button flex-1 py-2 text-center text-sm font-medium rounded-md">Songs</button>
+                <button id="artists-global-tab" class="global-tab-button flex-1 py-2 text-center text-sm font-medium rounded-md">Artists</button>
             </div>
 
-            <div id="tracks-list" class="space-y-3">
-                <!-- Loading Skeleton -->
-                <div id="loading-skeleton" class="space-y-3">
-                    <div class="flex items-center space-x-4 p-2 rounded-lg animate-pulse" v-for="i in 5">
-                        <div class="w-16 h-16 bg-zinc-800 rounded-md"></div>
-                        <div class="flex-1 space-y-2">
-                            <div class="h-4 bg-zinc-800 rounded w-3/4"></div>
-                            <div class="h-3 bg-zinc-800 rounded w-1/2"></div>
+            <!-- Songs View -->
+            <div id="songs-view">
+                 <!-- Time Period Tabs -->
+                <div id="songs-tabs" class="flex border-b border-zinc-800 mb-4">
+                    <button data-range="long_term" class="tab-button flex-1 py-2 text-center text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent">All Time</button>
+                    <button data-range="medium_term" class="tab-button flex-1 py-2 text-center text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent">Last 6 Months</button>
+                    <button data-range="short_term" class="tab-button flex-1 py-2 text-center text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent">Last 4 Weeks</button>
+                </div>
+                <div id="songs-list" class="space-y-3">
+                    <!-- Loading Skeleton for Songs -->
+                    <div id="songs-loading-skeleton" class="space-y-3">
+                        <div class="flex items-center space-x-4 p-2 rounded-lg animate-pulse" v-for="i in 5">
+                            <div class="w-16 h-16 bg-zinc-800 rounded-md"></div>
+                            <div class="flex-1 space-y-2">
+                                <div class="h-4 bg-zinc-800 rounded w-3/4"></div>
+                                <div class="h-3 bg-zinc-800 rounded w-1/2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Artists View -->
+            <div id="artists-view" class="hidden">
+                <!-- Time Period Tabs for Artists -->
+                <div id="artists-tabs" class="flex border-b border-zinc-800 mb-4">
+                    <button data-range="long_term" class="tab-button flex-1 py-2 text-center text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent">All Time</button>
+                    <button data-range="medium_term" class="tab-button flex-1 py-2 text-center text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent">Last 6 Months</button>
+                    <button data-range="short_term" class="tab-button flex-1 py-2 text-center text-sm font-medium text-zinc-400 hover:text-white border-b-2 border-transparent">Last 4 Weeks</button>
+                </div>
+                <div id="artists-list" class="space-y-3">
+                    <!-- Loading Skeleton for Artists -->
+                    <div id="artists-loading-skeleton" class="space-y-3">
+                        <div class="flex items-center space-x-4 p-2 rounded-lg animate-pulse" v-for="i in 5">
+                            <div class="w-16 h-16 bg-zinc-800 rounded-full"></div>
+                            <div class="flex-1 space-y-2">
+                                <div class="h-4 bg-zinc-800 rounded w-3/4"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -78,9 +114,16 @@
         const loginButton = document.getElementById('login-button');
         const logoutButton = document.getElementById('logout-button');
         const loginView = document.getElementById('login-view');
-        const tracksView = document.getElementById('tracks-view');
-        const tracksList = document.getElementById('tracks-list');
-        const loadingSkeleton = document.getElementById('loading-skeleton');
+        const mainContentView = document.getElementById('main-content-view');
+        const contentTypeTitle = document.getElementById('content-type-title');
+
+        const songsView = document.getElementById('songs-view');
+        const songsList = document.getElementById('songs-list');
+        const songsLoadingSkeleton = document.getElementById('songs-loading-skeleton');
+
+        const artistsView = document.getElementById('artists-view');
+        const artistsList = document.getElementById('artists-list');
+        const artistsLoadingSkeleton = document.getElementById('artists-loading-skeleton');
 
         // --- AUTHENTICATION ---
 
@@ -186,25 +229,49 @@
             return data.items;
         }
 
+        async function getTopArtists(token, timeRange = 'long_term') {
+            const limit = 50;
+            const url = new URL('https://api.spotify.com/v1/me/top/artists');
+            url.search = new URLSearchParams({
+                time_range: timeRange,
+                limit: limit
+            }).toString();
+
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('spotify_access_token');
+                    localStorage.removeItem('spotify_token_expires_at');
+                    showLoginView();
+                }
+                throw new Error('Could not fetch top artists.');
+            }
+            const data = await response.json();
+            return data.items;
+        }
+
 
         // --- UI RENDERING ---
 
-        function renderTracks(tracks) {
-            loadingSkeleton.remove();
-            tracksList.innerHTML = '';
+        function renderSongs(songs) {
+            songsList.innerHTML = ''; // Clear previous content, including skeleton
 
-            if (!tracks || tracks.length === 0) {
-                 tracksList.innerHTML = `<p class="text-zinc-400 text-center">Couldn't find any top tracks. Go listen to some music!</p>`;
+            if (!songs || songs.length === 0) {
+                 songsList.innerHTML = `<p class="text-zinc-400 text-center">Couldn't find any top songs. Go listen to some music!</p>`;
                  return;
             }
 
-            tracks.forEach((track, index) => {
-                const trackElement = document.createElement('div');
-                trackElement.className = 'flex items-center space-x-4 p-2 rounded-lg hover:bg-zinc-800 transition-colors';
+            songs.forEach((track, index) => {
+                const songElement = document.createElement('div');
+                songElement.className = 'flex items-center space-x-4 p-2 rounded-lg hover:bg-zinc-800 transition-colors';
                 
                 const artists = track.artists.map(artist => artist.name).join(', ');
                 
-                trackElement.innerHTML = `
+                songElement.innerHTML = `
                     <div class="text-zinc-400 text-lg w-6 text-right">${index + 1}</div>
                     <img src="${track.album.images[2]?.url || 'https://placehold.co/64x64/1DB954/FFFFFF?text=?'}" class="w-16 h-16 rounded-md shadow-md" alt="Album art for ${track.name}">
                     <div class="flex-1 overflow-hidden">
@@ -215,22 +282,48 @@
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-500 hover:text-green-500"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                     </a>
                 `;
-                tracksList.appendChild(trackElement);
+                songsList.appendChild(songElement);
             });
         }
         
         function showLoginView() {
             loginView.classList.remove('hidden');
-            tracksView.classList.add('hidden');
+            mainContentView.classList.add('hidden');
         }
 
-        function showTracksView() {
+        function showMainContentView() {
             loginView.classList.add('hidden');
-            tracksView.classList.remove('hidden');
+            mainContentView.classList.remove('hidden');
+        }
+
+        function renderArtists(artists) {
+            artistsList.innerHTML = ''; // Clear previous content
+
+            if (!artists || artists.length === 0) {
+                artistsList.innerHTML = `<p class="text-zinc-400 text-center">Couldn't find any top artists. Go listen to some music!</p>`;
+                return;
+            }
+
+            artists.forEach((artist, index) => {
+                const artistElement = document.createElement('div');
+                artistElement.className = 'flex items-center space-x-4 p-2 rounded-lg hover:bg-zinc-800 transition-colors';
+
+                artistElement.innerHTML = `
+                    <div class="text-zinc-400 text-lg w-6 text-right">${index + 1}</div>
+                    <img src="${artist.images[2]?.url || 'https://placehold.co/64x64/1DB954/FFFFFF?text=?'}" class="w-16 h-16 rounded-full shadow-md" alt="Image of ${artist.name}">
+                    <div class="flex-1 overflow-hidden">
+                        <p class="text-white font-medium truncate">${artist.name}</p>
+                    </div>
+                    <a href="${artist.external_urls.spotify}" target="_blank" rel="noopener noreferrer" class="ml-auto">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-500 hover:text-green-500"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </a>
+                `;
+                artistsList.appendChild(artistElement);
+            });
         }
 
 
-        // --- APP INITIALIZATION ---
+        // --- APP INITIALIZATION & DATA LOADING ---
 
         async function handleAuthRedirect(url) {
             try {
@@ -248,7 +341,8 @@
                 if (code) {
                     const accessToken = await getAccessToken(code);
                     if (accessToken) {
-                        loadUserTopTracks(accessToken);
+                        showMainContentView();
+                        loadUserTopSongs(accessToken, 'long_term');
                         // Clean the URL in the browser history
                         window.history.replaceState({}, document.title, window.location.pathname);
                     } else {
@@ -283,58 +377,80 @@
                 const expiresAt = localStorage.getItem('spotify_token_expires_at');
 
                 if (accessToken && expiresAt && Date.now() < parseInt(expiresAt)) {
-                    // Load with default time range
-                    loadUserTopTracks(accessToken, 'long_term');
+                    showMainContentView();
+                    // Load with default view
+                    switchGlobalTab('songs');
                 } else {
                     showLoginView();
                 }
             }
         }
 
-        // This function handles the redirect from Spotify when running as a native app
-        function handleAppUrlOpen() {
-            // This is a placeholder for Capacitor's App plugin listener.
-            // When building with Capacitor, you would add a listener like this:
-            //
-            // import { App } from '@capacitor/app';
-            // App.addListener('appUrlOpen', async (event) => {
-            //   const url = new URL(event.url);
-            //   if (url.protocol + '//' + url.host === redirectUri.substring(0, redirectUri.lastIndexOf('/'))) {
-            //     const code = url.searchParams.get('code');
-            //     if (code) {
-            //       window.history.replaceState({}, document.title, "/"); // Clean the URL
-            //       const accessToken = await getAccessToken(code);
-            //       if (accessToken) {
-            //         loadUserTopTracks(accessToken);
-            //       } else {
-            //         showLoginView();
-            //       }
-            //     }
-            //   }
-            // });
-            //
-            // Since we are in a single HTML file, we simulate this by checking if
-            // the page was loaded with a 'code' parameter after a redirect.
-            // The existing window.onload logic already handles this for us.
+        let currentView = 'songs';
+        function switchGlobalTab(tabName) {
+            currentView = tabName;
+            const token = localStorage.getItem('spotify_access_token');
+            const songsGlobalTab = document.getElementById('songs-global-tab');
+            const artistsGlobalTab = document.getElementById('artists-global-tab');
+
+            if (tabName === 'songs') {
+                contentTypeTitle.textContent = 'Songs';
+                songsView.classList.remove('hidden');
+                artistsView.classList.add('hidden');
+                songsGlobalTab.classList.add('active');
+                artistsGlobalTab.classList.remove('active');
+                // Load data if the list is empty
+                if (token && songsList.innerHTML.trim() === songsLoadingSkeleton.innerHTML.trim()) {
+                    loadUserTopSongs(token, 'long_term');
+                }
+            } else if (tabName === 'artists') {
+                contentTypeTitle.textContent = 'Artists';
+                songsView.classList.add('hidden');
+                artistsView.classList.remove('hidden');
+                songsGlobalTab.classList.remove('active');
+                artistsGlobalTab.classList.add('active');
+                // Load data if the list is empty
+                if (token && artistsList.innerHTML.trim() === artistsLoadingSkeleton.innerHTML.trim()) {
+                    loadUserTopArtists(token, 'long_term');
+                }
+            }
         }
 
-        async function loadUserTopTracks(token, timeRange = 'long_term') {
-            showTracksView();
+        async function loadUserTopSongs(token, timeRange = 'long_term') {
             try {
                 // Show skeleton while loading new content
-                tracksList.innerHTML = loadingSkeleton.innerHTML;
+                songsList.innerHTML = songsLoadingSkeleton.innerHTML;
 
-                const tracks = await getTopTracks(token, timeRange);
-                renderTracks(tracks);
+                const songs = await getTopTracks(token, timeRange);
+                renderSongs(songs);
 
                 // Update active tab
-                document.querySelectorAll('.tab-button').forEach(button => {
+                document.querySelectorAll('#songs-tabs .tab-button').forEach(button => {
                     button.classList.toggle('active', button.dataset.range === timeRange);
                 });
 
             } catch (error) {
                 console.error(error);
-                tracksList.innerHTML = `<p class="text-red-400 text-center">Failed to load tracks. Please try logging out and back in.</p>`;
+                songsList.innerHTML = `<p class="text-red-400 text-center">Failed to load songs. Please try logging out and back in.</p>`;
+            }
+        }
+
+        async function loadUserTopArtists(token, timeRange = 'long_term') {
+            try {
+                // Show skeleton while loading new content
+                artistsList.innerHTML = artistsLoadingSkeleton.innerHTML;
+
+                const artists = await getTopArtists(token, timeRange);
+                renderArtists(artists);
+
+                // Update active tab
+                document.querySelectorAll('#artists-tabs .tab-button').forEach(button => {
+                    button.classList.toggle('active', button.dataset.range === timeRange);
+                });
+
+            } catch (error) {
+                console.error(error);
+                artistsList.innerHTML = `<p class="text-red-400 text-center">Failed to load artists. Please try logging out and back in.</p>`;
             }
         }
 
@@ -343,15 +459,35 @@
             // Initialize the app when the DOM is ready
             initializeApp();
 
-            // Set up tab click listeners
-            const tabs = document.getElementById('tabs');
-            tabs.addEventListener('click', (event) => {
+            // Set up global tab switching
+            const songsGlobalTab = document.getElementById('songs-global-tab');
+            const artistsGlobalTab = document.getElementById('artists-global-tab');
+
+            songsGlobalTab.addEventListener('click', () => switchGlobalTab('songs'));
+            artistsGlobalTab.addEventListener('click', () => switchGlobalTab('artists'));
+
+            // Set up tab click listeners for songs
+            const songsTabs = document.getElementById('songs-tabs');
+            songsTabs.addEventListener('click', (event) => {
                 const button = event.target.closest('.tab-button');
                 if (button) {
                     const timeRange = button.dataset.range;
                     const token = localStorage.getItem('spotify_access_token');
                     if (token) {
-                        loadUserTopTracks(token, timeRange);
+                        loadUserTopSongs(token, timeRange);
+                    }
+                }
+            });
+
+            // Set up tab click listeners for artists
+            const artistsTabs = document.getElementById('artists-tabs');
+            artistsTabs.addEventListener('click', (event) => {
+                const button = event.target.closest('.tab-button');
+                if (button) {
+                    const timeRange = button.dataset.range;
+                    const token = localStorage.getItem('spotify_access_token');
+                    if (token) {
+                        loadUserTopArtists(token, timeRange);
                     }
                 }
             });
