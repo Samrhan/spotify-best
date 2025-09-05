@@ -56,7 +56,7 @@
 
     </div>
 
-    <script>
+    <script type="module">
         // --------------------------------------------------------------------------
         // IMPORTANT: CONFIGURATION
         //
@@ -79,6 +79,7 @@
         const tracksView = document.getElementById('tracks-view');
         const tracksList = document.getElementById('tracks-list');
         const loadingSkeleton = document.getElementById('loading-skeleton');
+        import { App } from 'https://unpkg.com/@capacitor/app@latest/dist/esm/index.js';
 
         // --- AUTHENTICATION ---
 
@@ -271,6 +272,12 @@
         // This function will initialize the app, checking for tokens and handling redirects.
         async function initializeApp() {
             log('initializeApp started.');
+
+            App.addListener('appUrlOpen', (data) => {
+                log(`App opened with URL: ${data.url}`);
+                handleAuthRedirect(data.url);
+            });
+
             try {
                 log('Attempting to inspect Capacitor objects...');
 
