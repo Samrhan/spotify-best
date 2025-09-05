@@ -223,36 +223,72 @@
 
         // --- APP INITIALIZATION ---
 
-        window.onload = async () => {
-            const params = new URLSearchParams(window.location.search);
-            const code = params.get('code');
+        // This function will handle the URL from Spotify, extract the code, and get the token
+        async function handleAuthRedirect(url) {
+            try {
+                // We need to parse the URL to get the 'code' query parameter
+                const urlObject = new URL(url);
+                const params = urlObject.searchParams;
+                const code = params.get('code');
+                const error = params.get('error');
 
-            // Clear the code from the URL so we don't re-process on refresh
-            if (code) {
-                window.history.replaceState({}, document.title, window.location.pathname);
+                if (error) {
+                    console.error('Error from auth provider:', error);
+                    showLoginView(); // Go back to login on error
+                    return;
+                }
+
+                if (code) {
+                    // We got the code, now exchange it for an access token
+                    const accessToken = await getAccessToken(code);
+                    if (accessToken) {
+                        // Successfully got a token, load the user's tracks
+                        loadUserTopTracks(accessToken);
+                        // Clean the URL in history so we don't re-process on refresh
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    } else {
+                        // Failed to get a token
+                        console.error('Could not get access token for the given code.');
+                        showLoginView();
+                    }
+                }
+            } catch (e) {
+                console.error('Error handling auth redirect URL:', e);
+                showLoginView();
+            }
+        }
+
+        // This function will initialize the app, checking for tokens and handling redirects.
+        async function initializeApp() {
+            // In a Capacitor app, plugins are available on the `window.Capacitor.Plugins` object.
+            const { App } = window.Capacitor.Plugins;
+
+            // Add a listener for when the app is opened from a URL while it's running
+            App.addListener('appUrlOpen', (event) => {
+                handleAuthRedirect(event.url);
+            });
+
+            // Check if the app was launched with a URL (i.e., from a closed state)
+            const launchUrl = await App.getLaunchUrl();
+            if (launchUrl && launchUrl.url) {
+                await handleAuthRedirect(launchUrl.url);
+                return; // The handler will show the correct view
             }
 
+            // If not launched with a URL, check for a stored, valid token
             const storedToken = localStorage.getItem('spotify_access_token');
             const tokenExpiresAt = localStorage.getItem('spotify_token_expires_at');
 
-            // If we have a code, exchange it for a token
-            if (code) {
-                 const accessToken = await getAccessToken(code);
-                 if (accessToken) {
-                    loadUserTopTracks(accessToken);
-                 } else {
-                    showLoginView();
-                 }
-            } 
-            // Else, if we have a stored token that is not expired
-            else if (storedToken && tokenExpiresAt && Date.now() < tokenExpiresAt) {
-                 loadUserTopTracks(storedToken);
-            } 
-            // Otherwise, show login
-            else {
+            if (storedToken && tokenExpiresAt && Date.now() < tokenExpiresAt) {
+                // We have a valid token, load the tracks
+                loadUserTopTracks(storedToken);
+            } else {
+                // No valid token, show the login screen
                 showLoginView();
             }
-        };
+        }
+
+        window.onload = initializeApp;
 
         async function loadUserTopTracks(token) {
             showTracksView();
